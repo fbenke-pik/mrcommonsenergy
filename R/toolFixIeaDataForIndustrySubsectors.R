@@ -295,7 +295,7 @@ toolFixIeaDataForIndustrySubsectors <- function(data) {
     group_by(!!!syms(c("iso3c", "year", "product", "flow"))) %>%
     summarise(value = sum(.data$value), .groups = "drop")
 
-  ## 1.4 Replace flwos of CO outputs by inputs to CO ----
+  ## 1.4 Replace flows of CO outputs by inputs to CO ----
 
   # Example of how replacement routine works:
   # Flow of CO outputs: COKEOVGS.TBLASTFUR = -10 (coke oven gas used in blast furnace)
