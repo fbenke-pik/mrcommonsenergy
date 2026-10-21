@@ -5,7 +5,7 @@
 \title{calcIOEdgeBuildings}
 \usage{
 calcIOEdgeBuildings(
-  subtype = c("output_EDGE", "output_EDGE_buildings"),
+  subtype = c("output_EDGE_ononspec", "output_EDGE_buildings"),
   ieaVersion = c("default", "latest")
 )
 }

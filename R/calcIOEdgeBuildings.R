@@ -36,8 +36,8 @@ calcIOEdgeBuildings <- function(subtype = c("output_EDGE_ononspec", "output_EDGE
   # AGGREGATE ------------------------------------------------------------------
 
   target <- switch(subtype,
-                   output_EDGE_ononspec = "EDGE_ononspec",
-                   output_EDGE_buildings = "EDGE_buildings"
+    output_EDGE_ononspec = "EDGE_ononspec",
+    output_EDGE_buildings = "EDGE_buildings"
   )
 
   mapping <- toolGetMapping(type = "sectoral",
