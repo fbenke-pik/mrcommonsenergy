@@ -46,7 +46,7 @@ A BibTeX entry for LaTeX users is
 @Misc{,
   title = {mrcommonsenergy: Preprocessing functions for REMIND and other energy models (no landuse data)},
   author = {Falk Benke and Robin Hasse and Simon Krogmann and Renato Rodrigues and Felix Schreyer},
-  date = {2026-10-21},
+  date = {2026-10-26},
   year = {2026},
   url = {https://github.com/pik-piam/mrcommonsenergy},
   note = {Version: 0.6.0},
