@@ -16,7 +16,6 @@
 #'
 #' @author Robin Hasse
 #'
-#' @importFrom dplyr %>%
 #' @importFrom magclass time_interpolate setNames getYears
 #' @export
 #'

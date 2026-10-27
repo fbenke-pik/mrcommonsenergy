@@ -1,8 +1,8 @@
 Type: Package
 Package: mrcommonsenergy
 Title: Preprocessing functions for REMIND and other energy models (no landuse data)
-Version: 0.5.1
-Date: 2026-07-30
+Version: 0.6.0
+Date: 2026-10-26
 Authors@R: c(
     person("Falk", "Benke", , "benke@pik-potsdam.de", role = c("aut", "cre")),
     person("Robin", "Hasse", role = "aut"),
@@ -21,6 +21,7 @@ Depends:
     mrdrivers (>= 7.1.1),
     R (>= 2.10.0)
 Imports:
+    assertr,
     data.table,
     dplyr,
     glue,
@@ -38,4 +39,4 @@ Encoding: UTF-8
 LazyData: no
 Roxygen: list(markdown = TRUE)
 Config/Needs/website: tidyverse/tidytemplate
-Config/roxygen2/version: 8.0.0
+Config/roxygen2/version: 8.1.1
