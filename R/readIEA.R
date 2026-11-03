@@ -6,7 +6,7 @@
 #' - "EnergyBalances": IEA energy balances until 2022 (2023 incomplete), data updated in Sep 2024,
 #' the current default for REMIND input data
 #' - "EnergyBalances-latest": IEA energy balances until 2023 (2024 incomplete), data updated in Aug 2025,
-#' - "EnergyBalances-2026": incomplete IEA energy balances update from Apr 2026,
+#' - "EnergyBalances-2026": IEA energy balances update from July 2026 (2025 incomplete), data updated in Nov 2026.
 #' @return magpie object of the IEA
 #' @author Anastasis Giannousakis, Lavinia Baumstark, Renato Rodrigues, Falk Benke
 #'
@@ -80,45 +80,7 @@ readIEA <- function(subtype) {
     }
 
     mdata <- as.magpie(data, spatial = 1, temporal = 4, datacol = 5)
-
-  } else if (subtype == "EnergyBalances-2026-Apr") {
-    data <- NULL
-    incomplete <- 2025
-
-    files <- list.files("IEA-Energy-Balances-2026-Apr", pattern = "*.csv", full.names = TRUE)
-
-    for (f in files) {
-      tmp <- data.table::fread(
-        file = f,
-        select = c(3, 7, 5, 11, 17, 15),
-        col.names = c("COUNTRY", "PRODUCT", "FLOW", "TIME", "UNIT", "VALUE"),
-        na.strings = c("x", "..", "c", ""),
-        skip = 0,
-        showProgress = FALSE
-      ) %>%
-        filter(
-          .data$UNIT %in% c("KTOE", "GWH"),
-          .data$TIME != incomplete # exclude latest year with incomplete data
-        ) %>%
-        mutate("VALUE" = as.numeric(.data$VALUE))
-
-      tmp$COUNTRY <- madrat::toolCountry2isocode(tmp$COUNTRY,
-        warn = TRUE,
-        mapping = c(
-          "NEWZEALAND" = "NZL",
-          "SOUTHAFRICA" = "ZAF"
-        )
-      )
-      tmp <- tmp %>%
-        filter(!is.na(.data$COUNTRY), !is.na(.data$VALUE))
-      data <- rbind(data, tmp)
-      rm(tmp)
-    }
-
-    mdata <- as.magpie(data, spatial = 1, temporal = 4, datacol = 6)
-
   } else if (subtype == "EnergyBalances-2026") {
-
     data <- NULL
     incomplete <- 2025
 
@@ -141,45 +103,48 @@ readIEA <- function(subtype) {
         # there are duplicates in the source data, e.g AUS|1960|BIOFUEL_NONSPEC.ELMAINE.GWH
         distinct()
 
-      ignoreCountries <- c("AFRICA_UN", "AMERICAS_UN", "ASEAN", "ASIA_UN", "CHINAREG", "EU27", "EU28",
-                           "EUROPE_UN", "F_USSR", "F_USSR_TOTAL", "F_YUGO_TOTAL", "F_YUGOSLAVIA",
-                           "G20", "G7", "G8", "IEAFAMILY", "IEATOT", "NON_OECDAFR", "NON_OECDAM",
-                           "NON_OECDAO_X_CHINA", "NON_OECDEURAS", "NON_OECDME", "NON_OECDTOT", "OCEANIA_UN",
-                           "OECDAM", "OECDAO", "OECDEUR", "OECDTOT", "OPEC", "OTH_NON_OECDAFR",
-                           "OTH_NON_OECDAM", "OTH_NON_OECDAO", "WORLD", "WORLDAV", "WORLDMAR")
+      ignoreCountries <- c(
+        "AFRICA_UN", "AMERICAS_UN", "ASEAN", "ASIA_UN", "CHINAREG", "EU27", "EU28",
+        "EUROPE_UN", "F_USSR", "F_USSR_TOTAL", "F_YUGO_TOTAL", "F_YUGOSLAVIA",
+        "G20", "G7", "G8", "IEAFAMILY", "IEATOT", "NON_OECDAFR", "NON_OECDAM",
+        "NON_OECDAO_X_CHINA", "NON_OECDEURAS", "NON_OECDME", "NON_OECDTOT", "OCEANIA_UN",
+        "OECDAM", "OECDAO", "OECDEUR", "OECDTOT", "OPEC", "WORLDAV", "WORLDMAR"
+      )
+
+      customRegionMappings <- c(
+        "BURKINAFASO" = "BFA",
+        "CONGO_DRC" = "COD",
+        "CONGO_REPUB" = "COG",
+        "F_USSR_TOTAL" = "SUN",
+        "F_YUGOSLAVIA" = "YUG",
+        "DOMINICANREP" = "DOM",
+        "NEWZEALAND" = "NZL",
+        "SAUDIARABIA" = "SAU",
+        "SOUTHAFRICA" = "ZAF",
+        "WORLD" = "GLO",
+        # Other non-OECD Africa (previously IAF)
+        "OTH_NON_OECDAFR" = "OTH_NON_OECDAFR",
+        # Other non-OECD Americas (previously ILA)
+        "OTH_NON_OECDAM" = "OTH_NON_OECDAM",
+        # Other non-OECD Africa (previously IAS)
+        "OTH_NON_OECDAO" = "OTH_NON_OECDAO"
+      )
+
 
       tmp$COUNTRY <- madrat::toolCountry2isocode(tmp$COUNTRY,
-                                                 warn = TRUE,
-                                                 mapping = c(
-                                                   "BURKINAFASO" = "BFA",
-                                                   "CONGO_DRC" = "COD",
-                                                   "CONGO_REPUB" = "COG",
-                                                   "F_USSR_TOTAL" = "SUN",
-                                                   "F_YUGOSLAVIA" = "YUG",
-                                                   "DOMINICANREP" = "DOM",
-                                                   "NEWZEALAND" = "NZL",
-                                                   "SAUDIARABIA" = "SAU",
-                                                   "SOUTHAFRICA" = "ZAF"
-                                                 ),
-                                                 ignoreCountries = ignoreCountries
+        warn = TRUE,
+        mapping = customRegionMappings,
+        ignoreCountries = ignoreCountries
       )
       tmp <- tmp %>%
         filter(!is.na(.data$COUNTRY), !is.na(.data$VALUE))
+
       data <- rbind(data, tmp)
       rm(tmp)
     }
 
     mdata <- as.magpie(data, spatial = 1, temporal = 4, datacol = 6)
     rm(data)
-
-  } else if (subtype == "Emissions") {
-    data <- utils::read.csv("emissions2013.csv")
-    data$COUNTRY <- toolCountry2isocode(data$COUNTRY, warn = FALSE) # nolint
-    data <- data[!is.na(data$COUNTRY), ]
-    data$TIME <- paste("y", data$TIME, sep = "") # nolint
-    if (names(data)[[5]] == "MtCO2") data <- data[!is.na(data$MtCO2), ]
-    if (names(data)[[5]] == "MtCO2") data$MtCO2 <- suppressWarnings(as.numeric(data$MtCO2)) # nolint
-    mdata <- as.magpie(data, datacol = dim(data)[2])
   } else {
     stop("Invalid subtype!")
   }
