@@ -10,11 +10,13 @@
 #'
 convertIEA <- function(x, subtype) {
 
+  # map to old product and flow names ----
+
   if (subtype %in% c("EnergyBalances-latest", "EnergyBalances-2026")) {
 
     x <- x["GLO", , , invert = TRUE]
 
-    # map to old product and flow names
+
     # this will be removed once we completely switch to the new format and adjust
     # all the IEA mappings accordingly
 
@@ -41,7 +43,6 @@ convertIEA <- function(x, subtype) {
       filter(.data$type == "PRODUCT") %>%
       select(-"type")
 
-
     productMap <- rbind(
       productMap,
       data.frame(
@@ -56,30 +57,26 @@ convertIEA <- function(x, subtype) {
   }
 
 
-  # aggregate Kosovo to Serbia
+  # aggregate Kosovo to Serbia ----
   x1 <- x["KOS", , ]
   getItems(x1, dim = 1) <- "SRB"
   x["SRB", , ] <- x["SRB", , ] + x1
   x <- x["KOS", , , invert = TRUE]
 
-  # convert electricity outputs (unit conversion between ktoe and GWh)
+  # convert electricity outputs (unit conversion between ktoe and GWh) ----
   x[, , c("ELOUTPUT", "ELMAINE", "ELAUTOE", "ELMAINC", "ELAUTOC")] <- 0.0859845 *
     x[, , c("ELOUTPUT", "ELMAINE", "ELAUTOE", "ELMAINC", "ELAUTOC")]
 
-  # calculate weight to be used for regional disaggregations
-  wp <- calcOutput("Population", scenario = "SSP2", aggregate = FALSE)[, 2010, ]
-  wg <- calcOutput("GDP", scenario = "SSP2", aggregate = FALSE)[, 2010, ]
-  wp <- wp / max(wp)
-  wg <- wg / max(wg)
-  w <- wp + wg
+  # disaggregating OTHER regions ----
 
-  # disaggregating regions
-  # - Other Africa (IAF)
-  # - Other non-OECD Americas (ILA)
-  # - Other non-OECD Asia (IAS)
+  # note that the mapping is currently not 100% accurate but should be close enough
+  # as an approximation, countries that used to belong to an other region until a certain point in time
+  # (e.g. Namibia until 1990) are not included at all and countries that were later
+  # added to an other region (e.g. Palau from 2010) are included
+  # see also the IEA World Balances Documentation for July 2026 (included in sources folder)
+  # this should not be problematic, as we rarely look at the data on regional level
 
-
-  mappingName <- if (subtype == "EnergyBalances-2026") "regionmappingIeaOther2026.csv" else "regionmappingIeaOther2016.csv"
+  mappingName <- if (subtype == "EnergyBalances") "regionmappingIeaOther2016.csv" else "regionmappingIeaOther2026.csv"
 
   mappingfile <- toolGetMapping(
     type = "regional", name = mappingName,
@@ -88,6 +85,14 @@ convertIEA <- function(x, subtype) {
 
   mapping <- utils::read.csv2(mappingfile, stringsAsFactors = TRUE) %>%
     filter(!(.data$CountryCode %in% getItems(x, dim = 1)))
+
+  # calculate weight to be used for regional disaggregations
+  wp <- calcOutput("Population", scenario = "SSP2", aggregate = FALSE)[, 2010, ]
+  wg <- calcOutput("GDP", scenario = "SSP2", aggregate = FALSE)[, 2010, ]
+  wp <- wp / max(wp)
+  wg <- wg / max(wg)
+  w <- wp + wg
+
 
   xadd <- toolAggregate(
     x = x[unique(mapping$RegionCode), , ],
@@ -117,9 +122,6 @@ convertIEA <- function(x, subtype) {
   )
   x[is.na(x)] <- 0
 
-  # filling missing country data ----
-  x <- toolCountryFill(x, 0, verbosity = 2)
-
   # These changes may reduce the amount of CHP plants to below what is actually
   # deployed in a region, because heat reporting is obscure. In some statistics,
   # heat from CHP plant used in the same industrial compound is NOT explicitly
@@ -138,10 +140,13 @@ convertIEA <- function(x, subtype) {
         union(getItems(x[, , "HEMAINC"], dim = 3.1)), iea_flows = c("ELMAINE", "ELMAINC", "HEMAINC")
     ) %>%
       tidyr::unite("product.flow", c("iea_product", "iea_flows"), sep = ".") %>%
-      dplyr::pull("product.flow"), getItems(x, dim = 3)
+      dplyr::pull("product.flow"),
+    getItems(x, dim = 3)
   )
 
-  x <- add_columns(x, addnm = missingFlows, dim = 3, fill = 0)
+  if (length(missingFlows) > 0) {
+    x <- add_columns(x, addnm = missingFlows, dim = 3, fill = 0)
+  }
 
   d <- x[, , c("ELMAINE", "ELMAINC", "HEMAINC")]
   tmp <- magclass::mcalc(d, ELMAINE ~ ifelse(HEMAINC > 0, ELMAINE, ELMAINC + ELMAINE), append = FALSE)
@@ -162,7 +167,9 @@ convertIEA <- function(x, subtype) {
       dplyr::pull("product.flow"), getItems(x, dim = 3)
   )
 
-  x <- add_columns(x, addnm = missingFlows, dim = 3, fill = 0)
+  if (length(missingFlows) > 0) {
+    x <- add_columns(x, addnm = missingFlows, dim = 3, fill = 0)
+  }
 
   d <- x[, , c("ELAUTOE", "HEAUTOC", "ELAUTOC")]
   tmp <- magclass::mcalc(d, ELAUTOE ~ ifelse(HEAUTOC > 0, ELAUTOE, ELAUTOC + ELAUTOE), append = FALSE)
@@ -182,6 +189,11 @@ convertIEA <- function(x, subtype) {
   # Adjust totals
   x["RUS", seq(1991, 2009, 1), "TOTAL.MARBUNK"] <-
     x["RUS", seq(1991, 2009, 1), "TOTAL.MARBUNK"] + x["RUS", seq(1991, 2009, 1), "NONBIODIES.MARBUNK"]
+
+
+  # filling missing country data ----
+  x <- toolCountryFill(x, 0, verbosity = 2)
+
 
   return(x)
 }
