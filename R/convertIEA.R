@@ -117,8 +117,8 @@ convertIEA <- function(x, subtype) {
   histMap <- rbind(yugoslavia, sun)
 
   x <- madrat::toolISOhistorical(x,
-                                 mapping = histMap, overwrite = TRUE,
-                                 additional_weight = w[unique(histMap$toISO), , ]
+    mapping = histMap, overwrite = TRUE,
+    additional_weight = w[unique(histMap$toISO), , ]
   )
   x[is.na(x)] <- 0
 
@@ -128,7 +128,7 @@ convertIEA <- function(x, subtype) {
   # reported as heat. If this is the case in the IEA data as well, this would
   # lead to underestimating CHP plants. However, there currently seems to be no
   # better way to create consistent data for CHP/non-CHP electricity production
-  # and heat ouput.
+  # and heat output.
 
   # for each product: check if the flow "HEMAINC" > 0, if yes, do nothing;
   # if no, add the value of the flow "ELMAINC" to "ELMAINE" and afterwards set ELMAINC to zero.
