@@ -5,8 +5,8 @@
 #' @param subtype data subtype. Either "EnergyBalances", "EnergyBalances-latest", or "Emissions".
 #' - "EnergyBalances": IEA energy balances until 2022 (2023 incomplete), data updated in Sep 2024,
 #' the current default for REMIND input data
-#' - "EnergyBalances-latest": IEA energy balances until 2023 (2024 incomplete), data updated in Aug 2025,
-#' - "EnergyBalances-2026": IEA energy balances update from July 2026 (2025 incomplete), data updated in Nov 2026.
+#' - "EnergyBalances-2025": IEA energy balances until 2023 (2024 incomplete), data updated in Aug 2025,
+#' - "EnergyBalances-latest": IEA energy balances update from July 2026 (2025 incomplete), data updated in Nov 2026.
 #' @return magpie object of the IEA
 #' @author Anastasis Giannousakis, Lavinia Baumstark, Renato Rodrigues, Falk Benke
 #'
@@ -33,7 +33,7 @@ readIEA <- function(subtype) {
       mutate("ktoe" = as.numeric(.data$ktoe))
 
     mdata <- as.magpie(data, datacol = 5, spatial = 1, temporal = 4)
-  } else if (subtype == "EnergyBalances-latest") {
+  } else if (subtype == "EnergyBalances-2025") {
     data <- NULL
     incomplete <- 2024
 
@@ -83,7 +83,7 @@ readIEA <- function(subtype) {
     }
 
     mdata <- as.magpie(data, spatial = 1, temporal = 4, datacol = 5)
-  } else if (subtype == "EnergyBalances-2026") {
+  } else if (subtype == "EnergyBalances-latest") {
     data <- NULL
     incomplete <- 2025
 
