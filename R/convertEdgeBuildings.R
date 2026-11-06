@@ -141,7 +141,7 @@ convertEdgeBuildings <- function(x, subtype, subset) {
 
     # never warn for zero weights, as this is covered by a custom warning
     xadd <- toolAggregate(x, mappingfile,
-      weight = wfe, from = regionCol, to = isoCol,
+      weight = wfe[, getYears(x), ], from = regionCol, to = isoCol,
       zeroWeight = "allow"
     )
 
