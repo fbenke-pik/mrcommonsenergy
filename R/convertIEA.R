@@ -27,33 +27,22 @@ convertIEA <- function(x, subtype) {
       filter(.data$type == "FLOW") %>%
       select(-"type")
 
-    flowMap <- rbind(
-      flowMap,
-      data.frame(
-        old_name = setdiff(getNames(x, dim = 2), flowMap$new_name),
-        new_name = setdiff(getNames(x, dim = 2), flowMap$new_name)
-      )
-    )
+    flowMap <- data.frame(new_name = getNames(x, dim = 2)) %>%
+      left_join(flowMap, by = "new_name") %>%
+      mutate("old_name" = ifelse(is.na(.data$old_name), .data$new_name, .data$old_name))
 
-    flowMap <- dplyr::arrange(flowMap, .data$new_name)
-
-    getNames(x, dim = 2) <- flowMap[, "old_name"]
+    getNames(x, dim = 2) <- flowMap$old_name
 
     productMap <- ieaShortNameMapping %>%
       filter(.data$type == "PRODUCT") %>%
       select(-"type")
 
-    productMap <- rbind(
-      productMap,
-      data.frame(
-        old_name = setdiff(getNames(x, dim = 1), productMap$new_name),
-        new_name = setdiff(getNames(x, dim = 1), productMap$new_name)
-      )
-    )
+    productMap <- data.frame(new_name = getNames(x, dim = 1)) %>%
+      left_join(productMap, by = "new_name") %>%
+      mutate("old_name" = ifelse(is.na(.data$old_name), .data$new_name, .data$old_name))
 
-    productMap <- dplyr::arrange(productMap, .data$new_name)
+    getNames(x, dim = 1) <- productMap$old_name
 
-    getNames(x, dim = 1) <- productMap[, "old_name"]
   }
 
 
@@ -76,12 +65,21 @@ convertIEA <- function(x, subtype) {
   # see also the IEA World Balances Documentation for July 2026 (included in sources folder)
   # this should not be problematic, as we rarely look at the data on regional level
 
-  mappingName <- if (subtype == "EnergyBalances") "regionmappingIeaOther2016.csv" else "regionmappingIeaOther2026.csv"
+  if (subtype == "EnergyBalances") {
 
-  mappingfile <- toolGetMapping(
-    type = "regional", name = mappingName,
-    returnPathOnly = TRUE, where = "mrcommonsenergy"
-  )
+    mappingfile <- toolGetMapping(
+      type = "regional", name = "regionmappingIeaOther2016.csv",
+      returnPathOnly = TRUE, where = "mrcommonsenergy"
+    )
+
+  } else {
+
+    mappingfile <- toolGetMapping(
+      type = "regional", name = "regionmappingIeaOther2026.csv",
+      returnPathOnly = TRUE, where = "mrcommonsenergy"
+    )
+
+  }
 
   mapping <- utils::read.csv2(mappingfile, stringsAsFactors = TRUE) %>%
     filter(!(.data$CountryCode %in% getItems(x, dim = 1)))
@@ -177,7 +175,6 @@ convertIEA <- function(x, subtype) {
   tmp <- magclass::mcalc(d, ELAUTOC ~ ifelse(HEAUTOC > 0, ELAUTOC, 0), append = FALSE)
   x[, , "ELAUTOC"] <- tmp
 
-
   # Correct transport reporting issue in IEA data for NONBIODIES.MARBUNK in RUS
   # FE is reported in 1990 and 2010 but not in the years in between.
   # This cause problems in the harmonization of EDGE-Transport and the IEA data
@@ -190,10 +187,8 @@ convertIEA <- function(x, subtype) {
   x["RUS", seq(1991, 2009, 1), "TOTAL.MARBUNK"] <-
     x["RUS", seq(1991, 2009, 1), "TOTAL.MARBUNK"] + x["RUS", seq(1991, 2009, 1), "NONBIODIES.MARBUNK"]
 
-
   # filling missing country data ----
   x <- toolCountryFill(x, 0, verbosity = 2)
-
 
   return(x)
 }
