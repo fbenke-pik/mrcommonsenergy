@@ -65,17 +65,17 @@ convertIEA <- function(x, subtype) {
   # see also the IEA World Balances Documentation for July 2026 (included in sources folder)
   # this should not be problematic, as we rarely look at the data on regional level
 
-  if (subtype == "EnergyBalances") {
+  if (subtype == "EnergyBalances-2026") {
 
     mappingfile <- toolGetMapping(
-      type = "regional", name = "regionmappingIeaOther2016.csv",
+      type = "regional", name = "regionmappingIeaOther2026.csv",
       returnPathOnly = TRUE, where = "mrcommonsenergy"
     )
 
   } else {
 
     mappingfile <- toolGetMapping(
-      type = "regional", name = "regionmappingIeaOther2026.csv",
+      type = "regional", name = "regionmappingIeaOther2016.csv",
       returnPathOnly = TRUE, where = "mrcommonsenergy"
     )
 
