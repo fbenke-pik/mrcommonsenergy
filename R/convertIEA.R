@@ -12,7 +12,7 @@ convertIEA <- function(x, subtype) {
 
   # map to old product and flow names ----
 
-  if (subtype %in% c("EnergyBalances-latest", "EnergyBalances-2026")) {
+  if (subtype %in% c("EnergyBalances-latest")) {
 
     x <- x["GLO", , , invert = TRUE]
 
@@ -50,6 +50,7 @@ convertIEA <- function(x, subtype) {
   x1 <- x["KOS", , ]
   getItems(x1, dim = 1) <- "SRB"
   x["SRB", , ] <- x["SRB", , ] + x1
+  rm(x1)
   x <- x["KOS", , , invert = TRUE]
 
   # convert electricity outputs (unit conversion between ktoe and GWh) ----
@@ -99,6 +100,7 @@ convertIEA <- function(x, subtype) {
   )
   x <- x[unique(mapping$RegionCode), , , invert = TRUE]
   x <- mbind(x, xadd)
+  rm(xadd)
 
   # disaggregating extinct countries USSR (SUN) and Yugoslavia (YUG) ----
 
@@ -129,7 +131,7 @@ convertIEA <- function(x, subtype) {
   # and heat output.
 
   # for each product: check if the flow "HEMAINC" > 0, if yes, do nothing;
-  # if no, add the value of the flow "ELMAINC" to "ELMAINE" and afterwards set ELMAINC to zero.
+  # if no, add the value of the flow "ELMAINC" to "ELMAINE" and afterwards set "ELMAINC" to zero.
 
   missingFlows <- setdiff(
     expand.grid(
@@ -142,6 +144,8 @@ convertIEA <- function(x, subtype) {
     getItems(x, dim = 3)
   )
 
+  # there should be no more missing flows with IEA 2026, as the data seems to cover
+  # all possible product-flow-combinations
   if (length(missingFlows) > 0) {
     x <- add_columns(x, addnm = missingFlows, dim = 3, fill = 0)
   }
@@ -165,6 +169,8 @@ convertIEA <- function(x, subtype) {
       dplyr::pull("product.flow"), getItems(x, dim = 3)
   )
 
+  # there should be no more missing flows with IEA 2026, as the data seems to cover
+  # all possible product-flow-combinations
   if (length(missingFlows) > 0) {
     x <- add_columns(x, addnm = missingFlows, dim = 3, fill = 0)
   }
@@ -179,13 +185,21 @@ convertIEA <- function(x, subtype) {
   # FE is reported in 1990 and 2010 but not in the years in between.
   # This cause problems in the harmonization of EDGE-Transport and the IEA data
   # in 2005 as there is no MARBUNK demand at all for REF regions.
+  if (subtype == "EnergyBalances-2026") {
+    x["RUS", seq(1990, 2010, 1), "GAS_DIESEL_OIL_NONBIO.BUNKERS_MARINE"] <-
+      x["RUS", c(1990, 2010), "GAS_DIESEL_OIL_NONBIO.BUNKERS_MARINE"] %>% time_interpolate(seq(1990, 2010, 1))
 
-  x["RUS", seq(1990, 2010, 1), "NONBIODIES.MARBUNK"] <-
-    x["RUS", c(1990, 2010), "NONBIODIES.MARBUNK"] %>% time_interpolate(seq(1990, 2010, 1))
+    # Adjust totals
+    x["RUS", seq(1991, 2009, 1), "TOTAL.BUNKERS_MARINE"] <-
+      x["RUS", seq(1991, 2009, 1), "TOTAL.BUNKERS_MARINE"] + x["RUS", seq(1991, 2009, 1), "GAS_DIESEL_OIL_NONBIO.BUNKERS_MARINE"]
+  } else {
+    x["RUS", seq(1990, 2010, 1), "NONBIODIES.MARBUNK"] <-
+      x["RUS", c(1990, 2010), "NONBIODIES.MARBUNK"] %>% time_interpolate(seq(1990, 2010, 1))
 
-  # Adjust totals
-  x["RUS", seq(1991, 2009, 1), "TOTAL.MARBUNK"] <-
-    x["RUS", seq(1991, 2009, 1), "TOTAL.MARBUNK"] + x["RUS", seq(1991, 2009, 1), "NONBIODIES.MARBUNK"]
+    # Adjust totals
+    x["RUS", seq(1991, 2009, 1), "TOTAL.MARBUNK"] <-
+      x["RUS", seq(1991, 2009, 1), "TOTAL.MARBUNK"] + x["RUS", seq(1991, 2009, 1), "NONBIODIES.MARBUNK"]
+  }
 
   # filling missing country data ----
   x <- toolCountryFill(x, 0, verbosity = 2)
