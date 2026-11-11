@@ -64,7 +64,6 @@ readIEA <- function(subtype) {
         "NEWZEALAND" = "NZL",
         "SAUDIARABIA" = "SAU",
         "SOUTHAFRICA" = "ZAF",
-        "WORLD" = "GLO",
         "F_USSR" = "SUN",
         "F_YUGOSLAVIA" = "YUG",
         "OTH_NON_OECDAFR" = "IAF",
@@ -81,6 +80,7 @@ readIEA <- function(subtype) {
 
     mdata <- as.magpie(data, spatial = 1, temporal = 4, datacol = 5)
   } else if (subtype == "EnergyBalances-2026") {
+
     data <- NULL
     incomplete <- 2025
 
@@ -93,7 +93,7 @@ readIEA <- function(subtype) {
         "EUROPE_UN", "F_USSR_TOTAL", "F_YUGO_TOTAL", "G20", "G7", "G8",
         "IEAFAMILY", "IEATOT", "NON_OECDAFR", "NON_OECDAM", "NON_OECDAO_X_CHINA",
         "NON_OECDEURAS", "NON_OECDME", "NON_OECDTOT", "OCEANIA_UN", "OECDAM",
-        "OECDAO", "OECDEUR", "OECDTOT", "OPEC", "WORLDAV", "WORLDMAR"
+        "OECDAO", "OECDEUR", "OECDTOT", "OPEC", "WORLDAV", "WORLDMAR", "WORLD"
       )
 
       tmp <- data.table::fread(
@@ -130,7 +130,6 @@ readIEA <- function(subtype) {
         "NEWZEALAND" = "NZL",
         "SAUDIARABIA" = "SAU",
         "SOUTHAFRICA" = "ZAF",
-        "WORLD" = "GLO",
         # Other non-OECD Africa (previously IAF)
         "OTH_NON_OECDAFR" = "OTH_NON_OECDAFR",
         # Other non-OECD Americas (previously ILA)
@@ -150,6 +149,11 @@ readIEA <- function(subtype) {
 
     mdata <- as.magpie(data, spatial = 1, temporal = 4, datacol = 5)
     rm(data)
+
+    # remove product flows with all zeros
+    pf_remove <- magpply(mdata, function(y) all(is.na(y) | y == 0), MARGIN = 3)
+    mdata <- mdata[, , pf_remove, invert = TRUE]
+
   } else {
     stop("Invalid subtype!")
   }

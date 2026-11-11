@@ -12,10 +12,7 @@ convertIEA <- function(x, subtype) {
 
   # map to old product and flow names ----
 
-  if (subtype %in% c("EnergyBalances-latest")) {
-
-    x <- x["GLO", , , invert = TRUE]
-
+  if (subtype %in% c("EnergyBalances-latest", "EnergyBalances-2026")) {
 
     # this will be removed once we completely switch to the new format and adjust
     # all the IEA mappings accordingly
