@@ -182,21 +182,12 @@ convertIEA <- function(x, subtype) {
   # FE is reported in 1990 and 2010 but not in the years in between.
   # This cause problems in the harmonization of EDGE-Transport and the IEA data
   # in 2005 as there is no MARBUNK demand at all for REF regions.
-  if (subtype == "EnergyBalances-2026") {
-    x["RUS", seq(1990, 2010, 1), "GAS_DIESEL_OIL_NONBIO.BUNKERS_MARINE"] <-
-      x["RUS", c(1990, 2010), "GAS_DIESEL_OIL_NONBIO.BUNKERS_MARINE"] %>% time_interpolate(seq(1990, 2010, 1))
+  x["RUS", seq(1990, 2010, 1), "NONBIODIES.MARBUNK"] <-
+    x["RUS", c(1990, 2010), "NONBIODIES.MARBUNK"] %>% time_interpolate(seq(1990, 2010, 1))
 
-    # Adjust totals
-    x["RUS", seq(1991, 2009, 1), "TOTAL.BUNKERS_MARINE"] <-
-      x["RUS", seq(1991, 2009, 1), "TOTAL.BUNKERS_MARINE"] + x["RUS", seq(1991, 2009, 1), "GAS_DIESEL_OIL_NONBIO.BUNKERS_MARINE"]
-  } else {
-    x["RUS", seq(1990, 2010, 1), "NONBIODIES.MARBUNK"] <-
-      x["RUS", c(1990, 2010), "NONBIODIES.MARBUNK"] %>% time_interpolate(seq(1990, 2010, 1))
-
-    # Adjust totals
-    x["RUS", seq(1991, 2009, 1), "TOTAL.MARBUNK"] <-
-      x["RUS", seq(1991, 2009, 1), "TOTAL.MARBUNK"] + x["RUS", seq(1991, 2009, 1), "NONBIODIES.MARBUNK"]
-  }
+  # Adjust totals
+  x["RUS", seq(1991, 2009, 1), "TOTAL.MARBUNK"] <-
+    x["RUS", seq(1991, 2009, 1), "TOTAL.MARBUNK"] + x["RUS", seq(1991, 2009, 1), "NONBIODIES.MARBUNK"]
 
   # filling missing country data ----
   x <- toolCountryFill(x, 0, verbosity = 2)

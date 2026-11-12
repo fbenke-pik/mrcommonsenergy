@@ -79,6 +79,10 @@ readIEA <- function(subtype) {
     }
 
     mdata <- as.magpie(data, spatial = 1, temporal = 4, datacol = 5)
+    # remove product flows with all zeros
+    pf_remove <- magpply(mdata, function(y) all(is.na(y) | y == 0), MARGIN = 3)
+    mdata <- mdata[, , !pf_remove]
+
   } else if (subtype == "EnergyBalances-2026") {
 
     data <- NULL
@@ -152,7 +156,7 @@ readIEA <- function(subtype) {
 
     # remove product flows with all zeros
     pf_remove <- magpply(mdata, function(y) all(is.na(y) | y == 0), MARGIN = 3)
-    mdata <- mdata[, , pf_remove, invert = TRUE]
+    mdata <- mdata[, , !pf_remove]
 
   } else {
     stop("Invalid subtype!")
