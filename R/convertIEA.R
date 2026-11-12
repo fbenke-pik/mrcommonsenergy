@@ -12,7 +12,7 @@ convertIEA <- function(x, subtype) {
 
   # map to old product and flow names ----
 
-  if (subtype %in% c("EnergyBalances-latest", "EnergyBalances-2026")) {
+  if (subtype %in% c("EnergyBalances-latest", "EnergyBalances-2025")) {
 
     # this will be removed once we completely switch to the new format and adjust
     # all the IEA mappings accordingly
@@ -63,7 +63,7 @@ convertIEA <- function(x, subtype) {
   # see also the IEA World Balances Documentation for July 2026 (included in sources folder)
   # this should not be problematic, as we rarely look at the data on regional level
 
-  if (subtype == "EnergyBalances-2026") {
+  if (subtype == "EnergyBalances-latest") {
 
     mappingfile <- toolGetMapping(
       type = "regional", name = "regionmappingIeaOther2026.csv",

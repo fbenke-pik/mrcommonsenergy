@@ -5,7 +5,7 @@
 #' @author Falk Benke
 calcIeaEnergyBalances <- function(ieaVersion) {
 
-  stopifnot(ieaVersion %in% c("default", "latest", "EnergyBalances-2026"))
+  stopifnot(ieaVersion %in% c("default", "latest", "EnergyBalances-2025"))
 
   if (ieaVersion == "default") {
     ieaSubtype <- "EnergyBalances"
