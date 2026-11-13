@@ -141,8 +141,6 @@ convertIEA <- function(x, subtype) {
     getItems(x, dim = 3)
   )
 
-  # there should be no more missing flows with IEA 2026, as the data seems to cover
-  # all possible product-flow-combinations
   if (length(missingFlows) > 0) {
     x <- add_columns(x, addnm = missingFlows, dim = 3, fill = 0)
   }
@@ -166,8 +164,6 @@ convertIEA <- function(x, subtype) {
       dplyr::pull("product.flow"), getItems(x, dim = 3)
   )
 
-  # there should be no more missing flows with IEA 2026, as the data seems to cover
-  # all possible product-flow-combinations
   if (length(missingFlows) > 0) {
     x <- add_columns(x, addnm = missingFlows, dim = 3, fill = 0)
   }
